@@ -18,6 +18,9 @@ file = 'flussonic.log'
 sysargv_auth = {"login": "admin", "password": "pass"}
 url = 'https://127.0.0.1/vsaas/api/v2/'
 
+#Result log file
+r_log = '/var/log/billing/flussonic.log'
+
 logins=[]
 fs_logins={}
 
@@ -34,6 +37,20 @@ flt = client.get_type('ns0:soapFilter')
 flt = flt(agentid=agent_id)
 response = client.service.getVgroups(flt)
 
+
+def get_session():
+   r = requests.post(url + 'auth/login', json=sysargv_auth)
+   print(r)
+   if r.status_code == 200:
+      session_id = r.json()['session']
+      file_auth = open(file, 'w+')
+      file_auth.write(session_id)
+      file_auth.close()
+      return session_id
+   else:
+      print('Get session: delete file')
+      os.remove(file)
+      exit(1)
 
 for i in range(len(response)):
    if response[i]['blocked'] == 0:
@@ -63,25 +80,14 @@ else:
    session_id = get_session()
 
 for i in logins:
+
   if fs_logins.get(i[0]) != None:
      if fs_logins.get(i[0])[1] != i[1]:
-        print(fs_logins.get(i[0])[1], i[1])
+        with open(r_log, 'a') as file:
+           file.write(i[0] + ' ' + str(fs_logins.get(i[0])[1]) + ' ' +  str(i[1]) + '\n')
         status = i[1]
         payload = {"enabled":status}
         user_id = 'users/{0}'.format(fs_logins.get(i[0])[0])
         r = requests.put(url + user_id, data=payload, headers=headers)
         if r.status_code == 403:
-
-def get_session():
-    r = requests.post(url + 'auth/login', json=sysargv_auth)
-    print(r)
-    if r.status_code == 200:
-        session_id = r.json()['session']
-        file_auth = open(file, 'w+')
-        file_auth.write(session_id)
-        file_auth.close()
-        return session_id
-    else:
-        print('Get session: delete file')
-        os.remove(file)
-        exit(1)
+           print('error 403')
