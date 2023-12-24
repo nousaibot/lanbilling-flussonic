@@ -84,7 +84,12 @@ for i in logins:
   if fs_logins.get(i[0]) != None:
      if fs_logins.get(i[0])[1] != i[1]:
         with open(r_log, 'a') as file:
-           file.write(i[0] + ' ' + str(fs_logins.get(i[0])[1]) + ' ' +  str(i[1]) + '\n')
+           if i[1] == True:
+              file.write(i[0] + ' '  + 'Enable\n')
+           else:
+              file.write(i[0] + ' '  + 'Disable\n')
+           #file.write(i[0] + ' ' + str(fs_logins.get(i[0])[1]) + ' ' +  str(i[1]) + '\n')
+
         status = i[1]
         payload = {"enabled":status}
         user_id = 'users/{0}'.format(fs_logins.get(i[0])[0])
